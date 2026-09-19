@@ -793,11 +793,7 @@ label generation must follow configured argmax/threshold rules.
 
 Preferred directory:
 
-submission/
-
-If the repository uses submissions/ instead:
-
-read config.
+submissions/
 
 Do not hardcode both.
 
@@ -905,7 +901,7 @@ reports/submission_validation.json
 
 final fusion predictions as configured
 
-submission/<configured_submission_file>
+submissions/<configured_submission_file>
 
 ============================================================
 33. PHASE WORKFLOW
@@ -986,7 +982,7 @@ Default M4 ownership:
 src/fusion/**
 tests/fusion/**
 reports/fusion_*
-submission/**
+submissions/**
 
 Only modify:
 

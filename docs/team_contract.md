@@ -16,7 +16,9 @@ Amazon ML Challenge 2026 multi-modal prediction pipeline.
 
 1. Use the shared raw data location only as input. Do not modify files in `data/raw/`.
 2. All modality-specific teams must consume the shared canonical processed schema agreed by the team.
-3. Each model output should follow the documented prediction schema: `id,prediction`.
+3. Each model output must follow the task-specific prediction contract:
+	- Regression and binary classification: `id,prediction`.
+	- Multiclass classification: `id,prob_<class_0>,prob_<class_1>,...`, using the exact order configured in `task.classes`.
 4. Validation performance is the decision criterion for keeping or discarding a model.
 5. More models are only kept when they add complementary information and improve validation metrics.
 6. No unnecessary framework or infrastructure work should be introduced before the modeling milestones are complete.

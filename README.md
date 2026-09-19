@@ -69,7 +69,7 @@ amazon-ml-challenge-2026/
 
 1. Member 1 creates and documents the canonical cleaned/processed dataset.
 2. Members 2 and 3 consume the agreed input format instead of independently rewriting the raw dataset.
-3. Members 1, 2, and 3 produce documented prediction files using the common schema `id,prediction`.
+3. Members 1, 2, and 3 produce documented prediction files using the task-specific contract: `id,prediction` for regression and binary classification, or `id,prob_<class_0>,prob_<class_1>,...` for multiclass classification in the exact configured class order.
 4. Member 4 aligns the prediction files, compares validation behavior, and evaluates blending or stacking.
 5. Every experiment records its validation score, configuration, and relevant artifact locations.
 

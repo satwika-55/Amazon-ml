@@ -330,6 +330,9 @@ prediction:
 fusion:
   enabled: true
 
+  # Set when the competition sample submission is available.
+  final_submission_filename: null
+
   # Explicit list is the DEFAULT.
   # Change this at competition time.
   models:

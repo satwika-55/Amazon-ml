@@ -94,17 +94,15 @@ Never merge by row position.
 
 predictions/oof/<model>_oof.csv
 
-Regression:
-
-id,prediction
-
-Binary:
+Regression and binary classification:
 
 id,prediction
 
 Multiclass:
 
-id,prob_class_0,...
+id,prob_<class_0>,prob_<class_1>,...
+
+Class columns must use the exact order configured in `task.classes`.
 
 Every training ID exactly once.
 
