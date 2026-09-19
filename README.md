@@ -2,111 +2,158 @@
 
 ## Project Objective
 
-Build a multimodal machine learning pipeline that combines:
-
-- Text
-- Images
-- Tabular and structured data
-- Domain-specific feature engineering
-- Multiple candidate models
-- Fusion, ensembling, and stacking
-- Final prediction and submission generation
-
-The team will evaluate each component with validation data and combine models only when they provide useful, complementary errors. More models do not automatically mean better performance.
-
-## Pipeline Architecture
+Build a multimodal machine learning pipeline combining tabular, text, and image models. M4 consumes standardized predictions from M1, M2, and M3, evaluates them, fuses only useful models, and creates the final submission.
 
 ```text
-RAW DATA
-    ↓
-DATA CLEANING / PREPROCESSING
-    ↓
- ┌──────────────┬──────────────┬──────────────┐
- │     TEXT     │    IMAGE     │   TABULAR    │
- └──────────────┴──────────────┴──────────────┘
-          ↓
-   MULTIPLE MODELS
-          ↓
-   OOF PREDICTIONS
-          ↓
- FUSION / ENSEMBLE / STACKING
-          ↓
-   FINAL PREDICTION
-          ↓
-      SUBMISSION
+DATA -> M1/M2/M3 -> OOF + TEST PREDICTIONS -> M4 VALIDATION/FUSION -> SUBMISSION
 ```
 
 ## Team Responsibilities
 
-| Member | Area | Primary responsibility |
+| Member | Area | Responsibility |
 | --- | --- | --- |
-| Member 1 | Data + Tabular | Canonical processed data, validation, features, and tabular models |
-| Member 2 | Text / NLP | Text preprocessing, TF-IDF, transformer embeddings, and text predictions |
-| Member 3 | Image / Vision | Image validation, preprocessing, frozen image embeddings, and image predictions |
-| Member 4 | Fusion + Ensemble | Prediction alignment, comparison, blending, stacking, and submission generation |
+| M1 | Data + Tabular | Canonical data, shared folds, tabular predictions |
+| M2 | Text / NLP | Text features and text predictions |
+| M3 | Image / Vision | Image features and image predictions |
+| M4 | Fusion + Ensemble | Validation, analysis, fusion, selection, submission |
+
+## Current Status
+
+The complete M4 engine has been implemented and tested before the competition data is available.
+
+### Completed
+
+- Configuration validation driven by `config/config.yaml`.
+- Strict prediction-file validation for regression, binary classification, and multiclass classification.
+- String ID normalization and ID-based alignment. Predictions are never merged by row position.
+- Duplicate, missing, extra, empty, NaN, infinity, wrong-column, invalid-probability, and row-count checks.
+- Shared fold validation without generating competition folds.
+- Centralized configurable metrics, including RMSE, MAE, MAPE, SMAPE, RMSLE, accuracy, and log loss support.
+- Individual model scoring and fold-level evaluation.
+- Regression target-quantile analysis.
+- Prediction correlation, residual/error correlation, and disagreement analysis.
+- Simple average and constrained weighted blending.
+- Configurable raw, `log1p`, and `logit` blend spaces.
+- Deterministic optimizer fallback to equal weights.
+- Model ablations.
+- Dependency-free Ridge stacking and nested fold evaluation.
+- Best-single-model comparison and deterministic candidate selection.
+- Final OOF-to-test fusion and OOF/test distribution checks.
+- Sample-submission validation with sample row-order preservation.
+- Canonical output directory: `submissions/`.
+- Isolated synthetic tests under `tests/fixtures/m4/` only.
+
+### Current pre-hackathon limitations
+
+The real competition data is not yet present. These files are intentionally missing:
+
+```text
+data/train.csv
+data/test.csv
+data/sample_submission.csv
+folds/folds.csv
+predictions/oof/<model>_oof.csv
+predictions/test/<model>_test.csv
+```
+
+No fake competition predictions, folds, reports, or submissions have been created. `TARGET_COLUMN` remains a placeholder until the real dataset arrives. PyYAML is declared in `requirements.txt` but has not been installed.
+
+## M4 Files
+
+- [src/fusion/analysis.py](src/fusion/analysis.py): individual scoring and error analysis.
+- [src/fusion/ensemble.py](src/fusion/ensemble.py): averaging, weighted blending, blend spaces, and ablations.
+- [src/fusion/stacking.py](src/fusion/stacking.py): Ridge stacking and nested evaluation.
+- [src/fusion/final_model.py](src/fusion/final_model.py): candidate selection, final fusion, distribution checks, and submission validation.
+- [src/utils/config.py](src/utils/config.py): configuration loading and validation.
+- [src/utils/prediction_contract.py](src/utils/prediction_contract.py): prediction loading and contract checks.
+- [src/utils/cv_split.py](src/utils/cv_split.py): shared-fold validation.
+- [src/utils/metrics.py](src/utils/metrics.py): centralized metric implementation.
+- [scripts/run_m4.py](scripts/run_m4.py): real-data M4 runner.
+
+## Prediction Contracts
+
+Regression and binary classification:
+
+```text
+id,prediction
+```
+
+For binary classification, `prediction` is the configured positive-class probability.
+
+Multiclass classification:
+
+```text
+id,prob_<class_0>,prob_<class_1>,...
+```
+
+The probability columns must use the exact order in `task.classes`.
+
+All official prediction files use the original target scale. M4 does not guess or silently change prediction scale.
 
 ## Repository Structure
 
 ```text
-amazon-ml-challenge-2026/
-├── data/                 # Raw, processed, and external data locations
-├── src/
-│   ├── data/             # Loading, validation, and shared feature engineering
-│   ├── text/             # Text preprocessing and text models
-│   ├── image/            # Image preprocessing and image models
-│   ├── tabular/          # Tabular preprocessing and tabular models
-│   ├── fusion/           # Ensembling, stacking, and final model orchestration
-│   └── utils/            # Metrics, CV, logging, and configuration helpers
-├── models/               # Model artifacts; large files stay out of Git
-├── predictions/          # Intermediate prediction artifacts
-├── submissions/          # Submission files
-├── notebooks/            # Exploratory notebooks
-├── docs/                 # Team process documentation
-└── scripts/              # Explicit pipeline entry points
+data/                 # Competition data, kept outside the pre-hackathon fixtures
+config/config.yaml    # Shared configuration
+src/fusion/           # M4 implementation
+src/utils/            # Shared M4 utilities
+tests/fixtures/m4/    # Synthetic test fixtures only
+predictions/oof/      # Real M1/M2/M3 OOF predictions after September 25
+predictions/test/     # Real M1/M2/M3 test predictions after September 25
+folds/                # Real shared folds after September 25
+reports/              # M4 reports generated by the runner
+submissions/          # Canonical final submission directory
 ```
 
-## How We Work
+Synthetic fixtures must never be copied into `predictions/`, `folds/`, or `submissions/`.
 
-1. Member 1 creates and documents the canonical cleaned/processed dataset.
-2. Members 2 and 3 consume the agreed input format instead of independently rewriting the raw dataset.
-3. Members 1, 2, and 3 produce documented prediction files using the task-specific contract: `id,prediction` for regression and binary classification, or `id,prob_<class_0>,prob_<class_1>,...` for multiclass classification in the exact configured class order.
-4. Member 4 aligns the prediction files, compares validation behavior, and evaluates blending or stacking.
-5. Every experiment records its validation score, configuration, and relevant artifact locations.
+## September 25 Checklist
 
-Members should work primarily in their assigned folders and communicate interface changes before merging them.
+1. Update [config/config.yaml](config/config.yaml):
+	- `task.type`
+	- `task.target`
+	- `task.id_column`
+	- `task.classes` when applicable
+	- `metric.name`
+	- `metric.direction`
+	- `fusion.models`
+	- `fusion.final_submission_filename`
+2. Add the real training/test data and sample submission using the configured paths.
+3. Add the shared `folds/folds.csv`; M4 will validate it and will not generate a replacement.
+4. Have M1, M2, and M3 provide matching OOF/test files using the prediction contracts above.
+5. Install dependencies once, if needed:
 
-## Git Workflow
-
-```text
-main
-  |
-  ├── member1-data-tabular
-  ├── member2-text
-  ├── member3-image
-  └── member4-fusion
+```powershell
+py -m pip install -r requirements.txt
 ```
 
-Before merging:
+6. Run M4 from the repository root:
 
-- Pull or rebase from `main`.
-- Run the relevant checks for the changed area.
-- Confirm that no accidental datasets, model weights, checkpoints, logs, or generated artifacts are staged.
-- Use meaningful commit messages.
+```powershell
+py scripts/run_m4.py --config config/config.yaml
+```
 
-## Important Data Rules
+7. Review the generated reports under `reports/` and the final file under `submissions/`.
 
-- `data/raw/` is read-only.
-- Never edit the original dataset.
-- Never regenerate benchmark or validation data.
-- Store processed datasets in `data/processed/`.
-- Do not commit large datasets unless explicitly required.
-- Do not commit model weights unless explicitly required.
-- Predictions must follow a documented schema, initially `id,prediction`.
-- Record every experiment's validation score and configuration.
+## Testing
 
-## Important Project Rules
+Run the complete pre-hackathon test suite:
 
-- Do not assume that adding more models improves performance.
-- Add models based on validation performance and complementary errors.
-- Do not add Docker, Kubernetes, MLflow, databases, cloud infrastructure, CI/CD, or unnecessary frameworks at this stage.
-- Dependencies will be selected and installed later by the team; this repository setup does not install packages or download assets.
+```powershell
+py -m unittest discover -s tests -p "test*.py" -v
+py -m compileall src tests scripts
+git diff --check
+```
+
+The current suite contains 31 tests covering contract validation, folds, metrics, analysis, blending, optimizer fallback, Ridge nesting, model selection, test fusion, multiclass probabilities, and submission ordering.
+
+## Working Rules
+
+- Do not modify `data/raw/`.
+- Do not hardcode the competition target, ID, metric, classes, model names, or submission filename.
+- Do not merge predictions by row position.
+- Do not use test labels.
+- Do not retrain M1, M2, or M3 inside M4.
+- Do not assume fusion beats the best single model.
+- Keep `submissions/` as the canonical submission directory.
+- Keep synthetic fixtures isolated from competition artifacts.
