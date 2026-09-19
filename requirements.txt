@@ -1,0 +1,4 @@
+# Future dependencies only. Exact versions will be decided after the dataset and
+# execution environment are inspected. Nothing is installed by repository setup.
+# TODO: Add the agreed data-processing, modeling, image, NLP, and evaluation
+# dependencies with pinned versions before implementation begins.
