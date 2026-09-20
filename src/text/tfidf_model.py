@@ -38,9 +38,9 @@ def build_vectorizer():
         "text",
         {}
     ).get(
-        "tfidf",
+        "models",
         {}
-    )
+    ).get("tfidf", {})
 
 
     vectorizer = TfidfVectorizer(
@@ -57,10 +57,7 @@ def build_vectorizer():
             )
         ),
 
-        min_df=tfidf_config.get(
-            "min_df",
-            2
-        ),
+        min_df=tfidf_config.get("min_df", 1),
 
         max_df=tfidf_config.get(
             "max_df",
@@ -168,18 +165,6 @@ def cross_validate_tfidf(
     config = load_config()
 
 
-    cv_config = config.get(
-        "training",
-        {}
-    )
-
-
-    folds = cv_config.get(
-        "folds",
-        5
-    )
-
-
     model = Ridge(
         alpha=1.0
     )
@@ -195,10 +180,7 @@ def cross_validate_tfidf(
 
         cv=folds,
 
-        scoring=cv_config.get(
-            "scoring",
-            "neg_mean_squared_error"
-        )
+        scoring="neg_mean_squared_error"
 
     )
 

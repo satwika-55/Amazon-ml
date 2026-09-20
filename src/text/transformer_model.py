@@ -18,7 +18,6 @@ ML Model
 
 import numpy as np
 
-from sentence_transformers import SentenceTransformer
 from sklearn.linear_model import Ridge
 
 from src.utils.config import load_config
@@ -35,6 +34,13 @@ def load_transformer():
 
 
     if _transformer_model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:
+            raise RuntimeError(
+                "Transformer support is optional; install sentence-transformers "
+                "only when the configured transformer candidate is enabled."
+            ) from exc
 
         config = load_config()
 
@@ -43,9 +49,9 @@ def load_transformer():
             "text",
             {}
         ).get(
-            "transformer",
+            "models",
             {}
-        )
+        ).get("transformer", {})
 
 
         model_name = transformer_config.get(
@@ -87,9 +93,9 @@ def extract_transformer_embeddings(text_data):
         "text",
         {}
     ).get(
-        "transformer",
+        "models",
         {}
-    )
+    ).get("transformer", {})
 
 
     batch_size = transformer_config.get(

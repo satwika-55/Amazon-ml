@@ -6,8 +6,6 @@ for M2 text pipeline.
 
 import pandas as pd
 
-from sklearn.model_selection import KFold
-
 
 
 def generate_oof_predictions(
@@ -15,7 +13,7 @@ def generate_oof_predictions(
     targets,
     ids,
     model_function,
-    folds=5
+    fold_assignments
 ):
     """
     Generate out-of-fold predictions.
@@ -34,8 +32,8 @@ def generate_oof_predictions(
         model_function:
             function that trains and returns model
 
-        folds:
-            number of folds
+        fold_assignments:
+            validated shared fold number for each training row
 
     Returns:
 
@@ -44,18 +42,13 @@ def generate_oof_predictions(
     """
 
 
-    kf = KFold(
-        n_splits=folds,
-        shuffle=True,
-        random_state=42
-    )
-
-
     oof_predictions = []
-
-
-
-    for train_idx, val_idx in kf.split(features):
+    fold_values = pd.Series(fold_assignments).reset_index(drop=True)
+    if len(fold_values) != len(ids):
+        raise ValueError("fold_assignments must have one value per training ID")
+    for fold in sorted(fold_values.unique()):
+        val_idx = fold_values.index[fold_values == fold].to_numpy()
+        train_idx = fold_values.index[fold_values != fold].to_numpy()
 
 
         X_train = features[train_idx]
