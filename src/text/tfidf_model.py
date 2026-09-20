@@ -1,5 +1,7 @@
 """Placeholder interfaces for a TF-IDF text baseline."""
 
+# TEXT -> NUMBERS -> ML MODEL
+
 
 def extract_tfidf_features(text_data):
     """TODO: Extract TF-IDF features."""
