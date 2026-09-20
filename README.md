@@ -145,6 +145,37 @@ py -m compileall src tests scripts
 git diff --check
 ```
 
+## M2 text pipeline
+
+The M2 runner is dataset-independent until M1 supplies the real files. It does
+not create synthetic text, folds, targets, or predictions. From the project
+root (`Amazon-ml-cahllenge-`), install dependencies once and run:
+
+```powershell
+py -m pip install -r requirements.txt
+py scripts/run_m2.py --config config/config.yaml
+```
+
+Before running, M1 must provide the configured `data/train.csv`,
+`data/test.csv`, and `folds/folds.csv`. Update `task.target` and
+`text.columns` only after inspecting the canonical training schema; leaving
+`text.columns` empty enables string/object-column discovery. The runner
+validates M1's exact shared fold file and stops if it is missing or invalid.
+
+With real data, the runner produces:
+
+- `features/text_struct.csv`
+- `predictions/oof/m2_oof.csv`
+- `predictions/test/m2_test.csv`
+- `reports/m2_text_report.{json,md}`
+- `reports/m2_metrics.{json,md}`
+- `reports/m2_experiments.csv`
+
+The first model is a cheap fold-fitted TF-IDF baseline. Embeddings and
+transformers remain disabled until validation evidence justifies their compute
+cost. Never copy the synthetic files under `tests/fixtures/m4/` into
+competition artifact directories.
+
 The current suite contains 31 tests covering contract validation, folds, metrics, analysis, blending, optimizer fallback, Ridge nesting, model selection, test fusion, multiclass probabilities, and submission ordering.
 
 ## Working Rules
