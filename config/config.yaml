@@ -1,0 +1,464 @@
+project:
+  name: "multimodal-ml-competition"
+  version: "1.0"
+  seed: 42
+
+task:
+  type: "regression"
+
+  # CHANGE THIS AT COMPETITION TIME
+  # Supported:
+  # regression
+  # binary_classification
+  # multiclass_classification
+  target: "TARGET_COLUMN"
+
+  id_column: "id"
+
+  # Only required for multiclass classification.
+  classes: []
+
+  # Optional:
+  positive_class: null
+
+data:
+  train_path: "data/train.csv"
+  test_path: "data/test.csv"
+
+  sample_submission_path: "data/sample_submission.csv"
+
+  encoding: "utf-8-sig"
+
+  # Whether to strip whitespace from CSV headers.
+  strip_header_whitespace: true
+
+  # IDs are always treated as strings.
+  id_as_string: true
+
+  # Preserve leading zeros and case.
+  preserve_id_case: true
+
+  # Never merge datasets by row order.
+  merge_on_id_only: true
+
+validation:
+  n_folds: 5
+
+  seed: 42
+
+  strategy: "auto"
+
+  # Possible:
+  # auto
+  # kfold
+  # stratified
+  # group
+  # stratified_group
+  stratify: false
+
+  group_column: null
+
+  shuffle: true
+
+  folds_path: "folds/folds.csv"
+
+  require_shared_folds: true
+
+  min_valid_folds: 2
+
+  warn_small_fold_size: 30
+
+metric:
+  # CHANGE AT COMPETITION TIME
+  name: "RMSE"
+
+  # "minimize" or "maximize"
+  direction: "minimize"
+
+  # Official competition formula must be implemented
+  # in src/utils/metrics.py
+  zero_division_policy: "configured"
+
+  probability_clip:
+    enabled: true
+    min: 1.0e-7
+    max: 0.9999999
+
+features:
+  automatic_type_detection: true
+
+  numeric: true
+  categorical: true
+  text: true
+  image: true
+  datetime: true
+
+  missing_indicators: true
+
+  remove_constant_features: true
+
+  remove_duplicate_columns: true
+
+  feature_selection:
+    enabled: false
+
+  target_encoding:
+    enabled: false
+    fold_safe: true
+
+text:
+  enabled: true
+
+  columns: []
+
+  missing_text_value: ""
+
+  normalization:
+    unicode: true
+    whitespace: true
+    lowercase: false
+    remove_html: true
+    preserve_numbers: true
+    preserve_units: true
+
+  structured_extraction:
+    enabled: true
+
+    output_path: "features/text_struct.csv"
+
+    fields:
+      brand:
+        enabled: true
+
+      product_type:
+        enabled: true
+
+      pack_quantity:
+        enabled: true
+
+      weight:
+        enabled: true
+
+      weight_unit:
+        enabled: true
+
+      volume:
+        enabled: true
+
+      volume_unit:
+        enabled: true
+
+      dimensions:
+        enabled: true
+
+      numeric_count:
+        enabled: true
+
+      unit_count:
+        enabled: true
+
+      model_number:
+        enabled: true
+
+    rare_category:
+      enabled: true
+
+      # CHANGE AFTER EDA.
+      min_frequency: 25
+
+      replacement: "OTHER"
+
+  models:
+    tfidf:
+      enabled: true
+
+      max_features: 100000
+
+      ngram_range: [1, 2]
+
+    embeddings:
+      enabled: false
+
+      model_name: null
+
+      batch_size: 32
+
+    transformer:
+      enabled: false
+
+      model_name: null
+
+      max_length: 512
+
+      epochs: 3
+
+      batch_size: 8
+
+    llm_extraction:
+      enabled: false
+
+      model_name: null
+
+      cache: true
+
+      resumable: true
+
+image:
+  enabled: true
+
+  columns: []
+
+  path_column: null
+
+  url_column: null
+
+  cache_dir: "data/image_cache"
+
+  embeddings_dir: "features/image_embeddings"
+
+  image_size: 224
+
+  batch_size: 32
+
+  workers: 4
+
+  pretrained: true
+
+  encoder: null
+
+  precision: "auto"
+
+  missing_image_fallback: "configured_baseline"
+
+  duplicate_detection: true
+
+  models:
+    cheap_embedding:
+      enabled: true
+
+    strong_encoder:
+      enabled: false
+
+    fine_tuned:
+      enabled: false
+
+models:
+  m1:
+    enabled: true
+
+    candidates:
+      baseline:
+        enabled: true
+
+      lightgbm:
+        enabled: true
+
+      xgboost:
+        enabled: true
+
+      catboost:
+        enabled: false
+
+    target_spaces:
+      raw:
+        enabled: true
+
+      log1p:
+        enabled: false
+
+    losses:
+      mae:
+        enabled: true
+
+      huber:
+        enabled: true
+
+      pseudo_huber:
+        enabled: true
+
+    pseudo_huber:
+      delta_strategy: "iqr"
+      delta: null
+
+  m2:
+    enabled: true
+
+    candidates:
+      tfidf:
+        enabled: true
+
+      embedding:
+        enabled: false
+
+      transformer:
+        enabled: false
+
+  m3:
+    enabled: true
+
+    candidates:
+      cheap_embedding:
+        enabled: true
+
+      strong_encoder:
+        enabled: false
+
+      fine_tuned:
+        enabled: false
+
+prediction:
+  output_scale: "original"
+
+  oof_dir: "predictions/oof"
+
+  test_dir: "predictions/test"
+
+  require_all_ids: true
+
+  allow_nan: false
+
+  allow_inf: false
+
+  merge_key: "id"
+
+  duplicate_id_policy: "fatal"
+
+  missing_id_policy: "fatal"
+
+  extra_id_policy: "fatal"
+
+fusion:
+  enabled: true
+
+  # Set when the competition sample submission is available.
+  final_submission_filename: null
+
+  # Explicit list is the DEFAULT.
+  # Change this at competition time.
+  models:
+    - m1
+    - m2
+    - m3
+
+  # Auto-discovery is development-only.
+  auto_discovery:
+    enabled: false
+
+  candidate_methods:
+    simple_average:
+      enabled: true
+
+    weighted_blend:
+      enabled: true
+
+    ridge:
+      enabled: true
+
+    advanced:
+      enabled: false
+
+  prediction_space:
+    default: "raw"
+
+    raw: true
+    log1p: false
+    rank: false
+    logit: false
+
+  weighted_blend:
+    nonnegative: true
+
+    sum_to_one: true
+
+    tolerance: 1.0e-9
+
+    optimizer: "SLSQP"
+
+    fallback: "equal_weight"
+
+  ridge:
+    enabled: true
+
+    alpha: 1.0
+
+    tune_alpha: false
+
+    inner_cv: 3
+
+  nested_evaluation:
+    enabled: true
+
+    outer_folds: 5
+
+  model_groups:
+    enabled: true
+
+    groups: {}
+
+  target_quantile_analysis:
+    enabled: true
+
+    quantiles: [0.25, 0.50, 0.75]
+
+  disagreement_analysis:
+    enabled: true
+
+  selection:
+    exclude_nan_candidates: true
+
+    one_se_rule: false
+
+    tie_break:
+      - simpler
+      - lower_fold_std
+      - alphabetical
+
+  best_single_fallback: true
+
+  calibration:
+    enabled: false
+
+paths:
+  reports: "reports"
+
+  folds: "folds"
+
+  features: "features"
+
+  predictions: "predictions"
+
+  submissions: "submissions"
+
+  logs: "logs"
+
+compute:
+  device: "auto"
+
+  max_workers: 4
+
+  mixed_precision: "auto"
+
+  max_runtime_hours: null
+
+  cache_models: true
+
+  cache_features: true
+
+  cache_embeddings: true
+
+  resumable_jobs: true
+
+runtime:
+  fail_fast_on_contract_error: true
+
+  warnings_as_errors: false
+
+  deterministic: true
+
+  verbose: true
+
+  save_intermediate_results: true
+
+  overwrite_predictions: false
+
+  overwrite_features: false
